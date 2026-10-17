@@ -14,8 +14,8 @@ class CMLConstructor {
 	public static Compiled compile(CommonsideModelInstance<?> instance) {
 		ModelData modelData = instance.modelData;
 		MatrixStack globalMatrix = new MatrixStack();
-		globalMatrix.translate(0, 1, 0);
-		globalMatrix.scale(-1,-1,1);
+		globalMatrix.scale(-1, -1, 1);
+		globalMatrix.translate(0, -1.501, 0);
 		HashMap<ModelPartId, CommonPart> commonPartHashMap = new HashMap<>();
 
 		processChild(
