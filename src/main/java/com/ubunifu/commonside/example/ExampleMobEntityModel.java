@@ -87,7 +87,7 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
 		return null;
 	}
 
-	public static TexturedModelData getTexturedModelData() {
+	public static ModelData getTexturedModelData() {
 		ModelData modelData = new ModelData();
 		ModelPartData modelPartData = modelData.getRoot();
 		ModelPartData _root = modelPartData.addChild("_", ModelPartBuilder.create(), ModelTransform.pivot(-0.575F, 24.0F, 0.0F));
@@ -159,7 +159,7 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
 		ModelPartData cloak = _root.addChild("cloak", ModelPartBuilder.create(), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
 
 		ModelPartData ear = _root.addChild("ear", ModelPartBuilder.create(), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
-		return TexturedModelData.of(modelData, 96, 96);
+		return modelData;
 	}
 	@Override
 	public void setAngles(ExampleMobEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
@@ -167,5 +167,9 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
 	@Override
 	public void render(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
 		_root.render(matrices, vertexConsumer, light, overlay, red, green, blue, alpha);
+	}
+
+	public static TexturedModelData createModel() {
+		return TexturedModelData.of( getTexturedModelData(), 96, 96 );
 	}
 }

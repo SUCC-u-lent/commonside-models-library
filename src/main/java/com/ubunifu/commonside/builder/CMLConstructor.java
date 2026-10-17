@@ -14,6 +14,8 @@ class CMLConstructor {
 	public static Compiled compile(CommonsideModelInstance<?> instance) {
 		ModelData modelData = instance.modelData;
 		MatrixStack globalMatrix = new MatrixStack();
+		globalMatrix.translate(0, 1, 0);
+		globalMatrix.scale(-1,-1,1);
 		HashMap<ModelPartId, CommonPart> commonPartHashMap = new HashMap<>();
 
 		processChild(
@@ -82,26 +84,34 @@ class CMLConstructor {
 			maxY = Math.max(maxY, y2);
 			maxZ = Math.max(maxZ, z2);
 		}
-		Box partSize = new Box(minX,minY,minZ,maxX,maxY,maxZ);
+
+		int reduceFactor = 16;
+		Box partSize = new Box(minX / reduceFactor,minY / reduceFactor,minZ / reduceFactor,maxX / reduceFactor,maxY / reduceFactor,maxZ / reduceFactor);
 		Vec3d size = new Vec3d(partSize.getXLength(), partSize.getYLength(), partSize.getZLength());
-
 		MatrixStack pMatrix = cloneMatrixStack( globalMatrix );
+		globalMatrix.translate(
+			pivot.x / reduceFactor,
+			pivot.y / reduceFactor,
+			pivot.z / reduceFactor
+		);
 
-		globalMatrix.multiply(Axis.X_POSITIVE.rotationDegrees((float) rotation.getX()));
-		globalMatrix.multiply(Axis.Y_POSITIVE.rotationDegrees((float) rotation.getY()));
-		globalMatrix.multiply(Axis.Z_POSITIVE.rotationDegrees((float) rotation.getZ()));
-
-		globalMatrix.scale((float) size.x, (float) size.y, (float) size.z);
-
-		globalMatrix.translate(pivot.x, pivot.y, pivot.z);
+		globalMatrix.multiply(
+			Axis.Z_POSITIVE.rotation((float) rotation.getZ())
+		);
+		globalMatrix.multiply(
+			Axis.Y_POSITIVE.rotation((float) rotation.getY())
+		);
+		globalMatrix.multiply(
+			Axis.X_POSITIVE.rotation((float) rotation.getX())
+		);
 
 
 		CommonPart commonPart = new CommonPart(
 			partId,
 			pivot,
 			size,
-			globalMatrix.peek().getModel(),
-			pMatrix.peek().getModel()
+			new Matrix4f(globalMatrix.peek().getModel()),
+			new Matrix4f(pMatrix.peek().getModel())
 		);
 		commonPartHashMap.put( partId, commonPart );
 		Map<String, ModelPartData> children = ((ModelPartDataAccessor)(Object)partData).CML$getChildren();
@@ -112,7 +122,7 @@ class CMLConstructor {
 				childName,
 				child,
 				cloneMatrixStack(globalMatrix),
-				pMatrix
+				globalMatrix
 			);
 		});
 	}

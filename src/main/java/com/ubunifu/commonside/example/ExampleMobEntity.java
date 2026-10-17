@@ -1,6 +1,7 @@
 package com.ubunifu.commonside.example;
 
 import com.ubunifu.commonside.CMLConstants;
+import com.ubunifu.commonside.registry.CMLRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.*;
@@ -34,5 +35,6 @@ public class ExampleMobEntity extends MobEntity {
 			TYPE,
 			createAttributes()
 		);
+		CMLRegistry.register(TYPE, ExampleMobEntityModel.getTexturedModelData());
 	}
 }
