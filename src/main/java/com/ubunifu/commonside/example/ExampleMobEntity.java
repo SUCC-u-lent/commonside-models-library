@@ -1,8 +1,10 @@
 package com.ubunifu.commonside.example;
 
-import com.ubunifu.commonside.CMLConstants;
+import com.ubunifu.commonside.*;
 import com.ubunifu.commonside.registry.CMLRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+import net.minecraft.client.model.*;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.mob.MobEntity;
@@ -11,7 +13,7 @@ import net.minecraft.world.World;
 import org.quiltmc.loader.api.QuiltLoader;
 import org.quiltmc.qsl.entity.api.QuiltEntityTypeBuilder;
 
-public class ExampleMobEntity extends MobEntity {
+public class ExampleMobEntity extends MobEntity implements CommonsideEntity {
 	public static EntityType<ExampleMobEntity> TYPE;
 
 	public ExampleMobEntity(EntityType<? extends MobEntity> entityType, World world) {
@@ -36,5 +38,15 @@ public class ExampleMobEntity extends MobEntity {
 			createAttributes()
 		);
 		CMLRegistry.register(TYPE, ExampleMobEntityModel.getTexturedModelData());
+	}
+
+	@Override
+	public EntityModel<?> getEntityModel(ModelPart root) {
+		return new ExampleMobEntityModel(root);
+	}
+
+	@Override
+	public TexturedModelData getModelData() {
+		return ExampleMobEntityModel.createModel();
 	}
 }
