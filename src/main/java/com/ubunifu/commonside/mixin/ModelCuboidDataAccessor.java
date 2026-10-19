@@ -13,24 +13,24 @@ import java.util.Set;
 @Mixin(ModelCuboidData.class)
 public interface ModelCuboidDataAccessor {
 	@Accessor("name")
-	String CML$getName();
+	String CSM$getName();
 
 	@Accessor("offset")
-	Vector3f CML$getOffset();
+	Vector3f CSM$getOffset();
 	@Accessor("dimensions")
-	Vector3f CML$getDimensions();
+	Vector3f CSM$getDimensions();
 
 	@Accessor("extraSize")
-	Dilation CML$getExtraSize();
+	Dilation CSM$getExtraSize();
 
 	@Accessor("mirror")
-	boolean CML$getMirror();
+	boolean CSM$getMirror();
 
 	@Accessor("textureUV")
-	Vector2f CML$textureUV();
+	Vector2f CSM$textureUV();
 	@Accessor("textureScale")
-	Vector2f CML$textureScale();
+	Vector2f CSM$textureScale();
 
 	@Accessor("directions")
-	Set<Direction> CML$getDirections();
+	Set<Direction> CSM$getDirections();
 }

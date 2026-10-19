@@ -1,6 +1,7 @@
 package com.ubunifu.commonside.builder;
 
 import com.google.common.util.concurrent.AtomicDouble;
+import com.ubunifu.commonside.*;
 import com.ubunifu.commonside.mixin.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.*;
@@ -8,7 +9,6 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.*;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.*;
 import org.joml.*;
 
@@ -16,20 +16,19 @@ import java.lang.Math;
 import java.util.*;
 import java.util.function.*;
 
-public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
-
-	M entityModel;
+public class CSMModel implements AutoCloseable {
 	ModelData modelData;
 	boolean applyGlobal;
 
+	/** The identity map, aka the unchanged source. */
+	private final Map<String, CommonPart> BASE_PART_MAP = new HashMap<>();
+	/** The animated map, aka the changed source. */
 	private final Map<String, CommonPart> PART_MAP = new HashMap<>();
 
-	CMLModel(T entity, M entityModel, ModelData modelData, boolean applyGlobal) {
+	CSMModel(ModelData modelData, boolean applyGlobal) {
 		this.modelData = modelData;
 		this.applyGlobal = applyGlobal;
-		this.entityModel = entityModel;
 		ModelPartData root = modelData.getRoot();
-		this.animateModel(entity);
 		process(root, applyGlobal);
 	}
 	//region Animation
@@ -40,7 +39,100 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 			return client.getTickDelta();
 		else return 0;
 	}
-	private void animateModel(T entity)
+	private void resetModel()
+	{
+		PART_MAP.clear();
+		PART_MAP.putAll(BASE_PART_MAP);
+	}
+	/**
+	 * Apply the animations performed in {@link EntityModel#setAngles(Entity, float, float, float, float, float)} to the current model
+	 * @param reset When True the model will be reset to its identity before each animate call.
+	 */
+	public <T extends LivingEntity & CSMEntity, M extends EntityModel<T> & CSModel> void animateModel(T entity, M model, boolean reset) {
+		if (reset) resetModel();
+		__animateModel(entity,model);
+		syncTransforms(model);
+	}
+
+	private <T extends LivingEntity & CSMEntity, M extends EntityModel<T> & CSModel>
+	void syncTransforms(M model) {
+		Matrix4f matrix4f = new Matrix4f();
+		matrix4f.translate(-0.04f,1.501f,0);
+		syncTransforms(model, "root", model.getRoot(), matrix4f);
+	}
+
+	private <T extends LivingEntity & CSMEntity, M extends EntityModel<T> & CSModel>
+	void syncTransforms(
+		M model,
+		String name,
+		ModelPart part,
+		Matrix4f parentDelta
+	) {
+		CommonPart base = BASE_PART_MAP.get(name);
+		if (base == null) return;
+
+		Matrix4f defaultLocal = new Matrix4f()
+			.translate(
+				base.pivot().x / 16.0F,
+				base.pivot().y / 16.0F,
+				base.pivot().z / 16.0F
+			)
+			.rotateZYX(
+				base.rotation().z,
+				base.rotation().y,
+				base.rotation().x
+			);
+
+		Matrix4f animatedLocal = new Matrix4f()
+			.translate(
+				part.pivotX / 16.0F,
+				part.pivotY / 16.0F,
+				part.pivotZ / 16.0F
+			)
+			.rotateZYX(part.roll, part.yaw, part.pitch);
+
+		Matrix4f localDelta = new Matrix4f(defaultLocal)
+			.invert()
+			.mul(animatedLocal);
+
+		Matrix4f global = new Matrix4f(parentDelta)
+			.mul(base.global())
+			.mul(localDelta);
+
+		Box localBounds = calculateLocalBounds(base.part());
+
+		PART_MAP.put(name, new CommonPart(
+			base.partCode(),
+			base.part(),
+			new Vector3f(part.pivotX, part.pivotY, part.pivotZ),
+			new Vector3f(part.pitch, part.yaw, part.roll),
+			global,
+			transformBox(localBounds, global),
+			base.childrenNames(),
+			createOrientedBox(localBounds, global),
+			base.isBone()
+		));
+
+		// Express this part's local change in the cached model-space frame.
+		Matrix4f childDelta = new Matrix4f(parentDelta)
+			.mul(base.global())
+			.mul(localDelta)
+			.mul(new Matrix4f(base.global()).invert());
+
+		for (String childName : base.childrenNames()) {
+			ModelPart child;
+
+			try {
+				child = part.getChild(childName);
+			} catch (NoSuchElementException ignored) {
+				child = model.getPartChild(part, childName);
+			}
+
+			syncTransforms(model, childName, child, childDelta);
+		}
+	}
+
+	private <T extends LivingEntity & CSMEntity, M extends EntityModel<T>> void __animateModel(T entity, M model)
 	{
 		float g = this.getTickDelta();
 		float h = MathHelper.lerpAngleDegrees(g, entity.prevBodyYaw, entity.bodyYaw);
@@ -68,10 +160,10 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 		// g = tickDelta
 		float l = this.animateGetAnimationProgress(entity, g);
 		this.animateSetupTransforms(entity, matrixStack, l, h, g);
-		entityModel.animateModel(entity, o, n, g);
-		entityModel.setAngles(entity, o, n, l, k, m);
+		model.animateModel(entity, o, n, g);
+		model.setAngles(entity, o, n, l, k, m);
 	}
-	private float animateGetAnimationProgress(T entity, float tickDelta) {
+	private <T extends LivingEntity & CSMEntity> float animateGetAnimationProgress(T entity, float tickDelta) {
 		return (float)entity.age + tickDelta;
 	}
 
@@ -91,13 +183,13 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 			}
 		}
 	}
-	private float animateGetLyingAngle(T entity) {
+	private <T extends LivingEntity & CSMEntity> float animateGetLyingAngle(T entity) {
 		return 90.0F;
 	}
-	private boolean animateIsShaking(T entity) {
+	private <T extends LivingEntity & CSMEntity> boolean animateIsShaking(T entity) {
 		return entity.isFrozen();
 	}
-	private void animateSetupTransforms(T entity, MatrixStack matrices, float animationProgress, float bodyYaw, float tickDelta) {
+	private <T extends LivingEntity & CSMEntity> void animateSetupTransforms(T entity, MatrixStack matrices, float animationProgress, float bodyYaw, float tickDelta) {
 		if (this.animateIsShaking(entity)) {
 			bodyYaw += (float)(Math.cos((double)entity.age * (double)3.25F) * Math.PI * (double)0.4F);
 		}
@@ -161,10 +253,10 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 			matrixStack
 		);
 
-		// Now finally we need to reitterate the children locating all without cuboids and setting those to have the bounds of all their children.
+		// Now finally we need to reiterate the children locating all without cuboids and setting those to have the bounds of all their children.
 		traverse(root)
 			.stream()
-			.filter(p->((ModelPartDataAccessor)(Object)p).CML$getCuboidData().isEmpty())
+			.filter(p->((ModelPartDataAccessor)(Object)p).CSM$getCuboidData().isEmpty())
 			.forEach(child->{
 				Box finalBounds = calculateLocalBounds( child );
 				Map.Entry<String, CommonPart> transform = this.getParts().entrySet().stream().filter(v->v.getValue().partCode() == child.hashCode()).findFirst().orElse(null);
@@ -177,9 +269,11 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 						transform.getValue().rotation(),
 						transform.getValue().global(),
 						finalBounds,
+						transform.getValue().childrenNames(),
 						new OmniBox(finalBounds.minX,finalBounds.minY,finalBounds.minZ,finalBounds.maxX,finalBounds.maxY,finalBounds.maxZ),
 						true
 					);
+					BASE_PART_MAP.put( transform.getKey(), newTransform );
 					PART_MAP.put( transform.getKey(), newTransform );
 				}
 			});
@@ -187,7 +281,7 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 
 	private List<ModelPartData> traverse(ModelPartData root) {
 		List<ModelPartData> mpd = new ArrayList<>();
-		List<ModelPartData> r = new ArrayList<>(((ModelPartDataAccessor) (Object) root).CML$getChildren().values());
+		List<ModelPartData> r = new ArrayList<>(((ModelPartDataAccessor) (Object) root).CSM$getChildren().values());
 		for (ModelPartData data : r) {
 			mpd.add( data );
 			mpd.addAll( traverse( data ) );
@@ -235,7 +329,7 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 			maxZ.get(),
 			box.maxZ
 		));
-		Map<String, ModelPartData> children = ((ModelPartDataAccessor)(Object)child).CML$getChildren();
+		Map<String, ModelPartData> children = ((ModelPartDataAccessor)(Object)child).CSM$getChildren();
 		for (Map.Entry<String, ModelPartData> entry : children.entrySet()) postProcessChild( entry.getKey(),entry.getValue(),minX, minY, minZ, maxX, maxY, maxZ );
 	}
 
@@ -253,7 +347,7 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 		matrixStack.push();
 
 		Consumer<MatrixStack> rotateMatrixStack = (MatrixStack matrix)->{
-			ModelTransform transform = ((ModelPartDataAccessor)(Object)child).CML$getRotationData();
+			ModelTransform transform = ((ModelPartDataAccessor)(Object)child).CSM$getRotationData();
 
 			matrix.translate(transform.pivotX / 16.0F, transform.pivotY / 16.0F, transform.pivotZ / 16.0F);
 			if (transform.pitch != 0.0F || transform.yaw != 0.0F || transform.roll != 0.0F) {
@@ -281,9 +375,11 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 			globalMatrix
 		);
 
-		ModelTransform transform = ((ModelPartDataAccessor)(Object)child).CML$getRotationData();
+		ModelTransform transform = ((ModelPartDataAccessor)(Object)child).CSM$getRotationData();
 		Vector3f pivot = new Vector3f( transform.pivotX, transform.pivotY, transform.pivotZ );
 		Vector3f rotation = new Vector3f( transform.pitch, transform.yaw, transform.roll );
+		Map<String, ModelPartData> children =
+			((ModelPartDataAccessor) (Object) child).CSM$getChildren();
 
 		CommonPart partTransform = new CommonPart(
 			child.hashCode(),
@@ -292,14 +388,14 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 			rotation,
 			new Matrix4f(matrixStack.peek().getModel()),
 			bounds,
+			children.keySet().toArray(String[]::new),
 			orientatedBox,
 			false
 		);
 
+		BASE_PART_MAP.put(childName, partTransform);
 		PART_MAP.put(childName, partTransform);
 
-		Map<String, ModelPartData> children =
-			((ModelPartDataAccessor) (Object) child).CML$getChildren();
 
 		children.forEach(
 			(name, childPart) ->
@@ -323,7 +419,7 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 	 */
 	private Box calculateLocalBounds(ModelPartData part) {
 		List<ModelCuboidData> cuboids =
-			((ModelPartDataAccessor) (Object) part).CML$getCuboidData();
+			((ModelPartDataAccessor) (Object) part).CSM$getCuboidData();
 
 		if (cuboids.isEmpty()) {
 			return new Box(0, 0, 0, 0, 0, 0);
@@ -339,23 +435,23 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 
 		for (ModelCuboidData cuboid : cuboids) {
 			Vector3f offset =
-				((ModelCuboidDataAccessor) (Object) cuboid).CML$getOffset();
+				((ModelCuboidDataAccessor) (Object) cuboid).CSM$getOffset();
 
 			Vector3f dimensions =
-				((ModelCuboidDataAccessor) (Object) cuboid).CML$getDimensions();
+				((ModelCuboidDataAccessor) (Object) cuboid).CSM$getDimensions();
 
 			Dilation dilation =
-				((ModelCuboidDataAccessor) (Object) cuboid).CML$getExtraSize();
+				((ModelCuboidDataAccessor) (Object) cuboid).CSM$getExtraSize();
 
 			DilationAccessor extra = (DilationAccessor) (Object) dilation;
 
-			double x1 = (offset.x - extra.CML$getRadiusX()) / 16.0;
-			double y1 = (offset.y - extra.CML$getRadiusY()) / 16.0;
-			double z1 = (offset.z - extra.CML$getRadiusZ()) / 16.0;
+			double x1 = (offset.x - extra.CSM$getRadiusX()) / 16.0;
+			double y1 = (offset.y - extra.CSM$getRadiusY()) / 16.0;
+			double z1 = (offset.z - extra.CSM$getRadiusZ()) / 16.0;
 
-			double x2 = (offset.x + dimensions.x + extra.CML$getRadiusX()) / 16.0;
-			double y2 = (offset.y + dimensions.y + extra.CML$getRadiusY()) / 16.0;
-			double z2 = (offset.z + dimensions.z + extra.CML$getRadiusZ()) / 16.0;
+			double x2 = (offset.x + dimensions.x + extra.CSM$getRadiusX()) / 16.0;
+			double y2 = (offset.y + dimensions.y + extra.CSM$getRadiusY()) / 16.0;
+			double z2 = (offset.z + dimensions.z + extra.CSM$getRadiusZ()) / 16.0;
 
 			minX = Math.min(minX, x1);
 			minY = Math.min(minY, y1);
@@ -626,139 +722,12 @@ public class CMLModel<T extends LivingEntity,M extends EntityModel<T>> {
 
 		return getOrientedPartBounds(part);
 	}
-
-	/**
-	 * Returns the oriented bounds of a model part in world space.
-	 *
-	 * The existing Box bounds are NOT modified by this.
-	 */
-	private OmniBox getWorldOrientedPartBounds(
-		ModelPartData part,
-		T entity
-	) {
-		OmniBox localBounds =
-			getOrientedPartBounds(part);
-
-		Vec3d entityPos =
-			entity.getPos();
-
-		float entityYaw = (float) entity.getRotationVec(1.0f).getY();
-
-		Quaternionf entityRotation =
-			Axis.Y_POSITIVE.rotationDegrees(
-				180.0F - entityYaw
-			);
-
-		Quaternionf partRotation =
-			new Quaternionf();
-
-		Vec3d localRotation =
-			localBounds.getRotation();
-
-		partRotation.rotateXYZ(
-			(float) Math.toRadians(localRotation.x),
-			(float) Math.toRadians(localRotation.y),
-			(float) Math.toRadians(localRotation.z)
-		);
-
-		entityRotation.mul(partRotation);
-
-		Vector3f center =
-			new Vector3f(
-				(float) localBounds.getCenter().x,
-				(float) localBounds.getCenter().y,
-				(float) localBounds.getCenter().z
-			);
-
-		center.rotate(entityRotation);
-
-		center.add(
-			(float) entityPos.x,
-			(float) entityPos.y,
-			(float) entityPos.z
-		);
-
-		Vector3f euler =
-			new Vector3f();
-
-		entityRotation.getEulerAnglesXYZ(
-			euler
-		);
-
-		Vec3d worldRotation =
-			new Vec3d(
-				Math.toDegrees(euler.x),
-				Math.toDegrees(euler.y),
-				Math.toDegrees(euler.z)
-			);
-
-		OmniBox worldBounds =
-			new OmniBox(
-				(float) (center.x - localBounds.getXLength() * 0.5D),
-				(float) (center.y - localBounds.getYLength() * 0.5D),
-				(float) (center.z - localBounds.getZLength() * 0.5D),
-				(float) (center.x + localBounds.getXLength() * 0.5D),
-				(float) (center.y + localBounds.getYLength() * 0.5D),
-				(float) (center.z + localBounds.getZLength() * 0.5D),
-				worldRotation
-			);
-
-		return worldBounds;
-	}
-
-	/**
-	 * Tests whether the player is looking directly at a model part.
-	 */
-	public boolean isLookingAt(PlayerEntity player, T entity, ModelPartData part) {
-		if (player == null || part == null)
-			return false;
-
-		Box bounds = getPartBounds(part);
-
-		Vec3d origin = player.getEyePos();
-		Vec3d direction = player.getRotationVec(1.0F);
-
-		Vec3d end = origin.add(direction.multiply(64.0D));
-
-		Vec3d entityPos = entity.getPos();
-
-		origin = origin.subtract(entityPos);
-		end = end.subtract(entityPos);
-
-		float yaw = entity.getYaw();
-
-		Quaternionf inverseEntityRotation =
-			Axis.Y_POSITIVE
-				.rotationDegrees(yaw);
-
-		Vector3f localOrigin = new Vector3f(
-			(float) origin.x,
-			(float) origin.y,
-			(float) origin.z
-		);
-
-		Vector3f localEnd = new Vector3f(
-			(float) end.x,
-			(float) end.y,
-			(float) end.z
-		);
-
-		localOrigin.rotate(inverseEntityRotation);
-		localEnd.rotate(inverseEntityRotation);
-
-		Vec3d rayOrigin = new Vec3d(
-			localOrigin.x,
-			localOrigin.y,
-			localOrigin.z
-		);
-
-		Vec3d rayEnd = new Vec3d(
-			localEnd.x,
-			localEnd.y,
-			localEnd.z
-		);
-
-		return bounds.raycast(rayOrigin, rayEnd).isPresent();
-	}
 	//endregion
+
+	@Override
+	public void close() throws Exception {
+		this.PART_MAP.clear();
+		this.BASE_PART_MAP.clear();
+		this.modelData = null;
+	}
 }

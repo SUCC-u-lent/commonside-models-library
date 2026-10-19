@@ -3,7 +3,7 @@ package com.ubunifu.commonside;
 import net.minecraft.util.Identifier;
 import org.slf4j.*;
 
-public class CMLConstants {
+public class CSMConstants {
 	public static final String MOD_ID = "commonside";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 

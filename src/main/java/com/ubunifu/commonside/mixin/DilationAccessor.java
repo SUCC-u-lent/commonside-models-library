@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(Dilation.class)
 public interface DilationAccessor {
 	@Accessor("radiusX")
-	float CML$getRadiusX();
+	float CSM$getRadiusX();
 	@Accessor("radiusY")
-	float CML$getRadiusY();
+	float CSM$getRadiusY();
 	@Accessor("radiusZ")
-	float CML$getRadiusZ();
+	float CSM$getRadiusZ();
 }

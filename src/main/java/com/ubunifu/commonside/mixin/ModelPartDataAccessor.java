@@ -11,9 +11,9 @@ import java.util.*;
 public interface ModelPartDataAccessor {
 
 	@Accessor("cuboidData")
-	List<ModelCuboidData> CML$getCuboidData();
+	List<ModelCuboidData> CSM$getCuboidData();
 	@Accessor("rotationData")
-	ModelTransform CML$getRotationData();
+	ModelTransform CSM$getRotationData();
 	@Accessor("children")
-	Map<String, ModelPartData> CML$getChildren();
+	Map<String, ModelPartData> CSM$getChildren();
 }

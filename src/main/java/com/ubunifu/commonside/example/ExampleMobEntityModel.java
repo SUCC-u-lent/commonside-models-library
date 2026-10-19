@@ -1,12 +1,15 @@
 package com.ubunifu.commonside.example;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.ubunifu.commonside.*;
 import com.ubunifu.commonside.mixin.ModelPartAccessor;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Arm;
+import net.minecraft.util.math.MathHelper;
 
-public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
+public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> implements CSMModelWithArms, CSModel {
 	private final ModelPart _root;
 	private final ModelPart body;
 	private final ModelPart jacket;
@@ -80,11 +83,17 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
 	}
 	private ModelPart getChild(ModelPart parent, String name){
 		if (parent.containsPart(name)) return parent.getChild(name);
-		for (ModelPart value : ((ModelPartAccessor) (Object) parent).CML$getChildren().values()) {
+		for (ModelPart value : ((ModelPartAccessor) (Object) parent).CSM$getChildren().values()) {
 			ModelPart p = getChild( value, name );
 			if (p != null) return p;
 		}
 		return null;
+	}
+
+	@Override
+	public ModelPart getPartChild(ModelPart part, String childName) {
+		if (childName.equalsIgnoreCase("_")) return this._root;
+		return part.getChild(childName);
 	}
 
 	public static ModelData getTexturedModelData() {
@@ -162,7 +171,28 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
 		return modelData;
 	}
 	@Override
-	public void setAngles(ExampleMobEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+	public void setAngles(ExampleMobEntity livingEntity, float limbAngle, float limbDistance, float ageInTicks, float headYaw, float headPitch) {
+		this.left_arm.pitch += (float) Math.toRadians(0.5);
+		this.right_arm.pitch -= (float) Math.toRadians(0.5);
+//		// Reset all parts
+//		this._root.traverse().forEach(ModelPart::resetTransform);
+//
+//		float limbDampen = Math.max(0.001F, 1);
+//		float dampenFactor = 1.0F / limbDampen;
+//
+//		this.head.yaw = headYaw * ((float)Math.PI / 180F);
+//		this.head.pitch = headPitch * ((float)Math.PI / 180F);
+//
+//		// Arms
+//		this.left_arm.pitch = MathHelper.cos(limbAngle * 0.6662F) * 1.4F * limbDistance * dampenFactor;
+//		this.right_arm.pitch = MathHelper.cos(limbAngle * 0.6662F + (float)Math.PI) * 1.4F * limbDistance * dampenFactor;
+//		// Held item adjustments
+//		this.left_arm.pitch = this.left_arm.pitch * 0.5F - (float)Math.PI / 10F;
+//		this.right_arm.pitch = this.right_arm.pitch * 0.5F - (float)Math.PI / 10F;
+//
+//		// Legs
+//		this.left_leg.pitch = MathHelper.cos(limbAngle * 0.6662F + (float)Math.PI) * 1.4F * limbDistance * dampenFactor;
+//		this.right_leg.pitch = MathHelper.cos(limbAngle * 0.6662F) * 1.4F * limbDistance * dampenFactor;
 	}
 	@Override
 	public void render(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
@@ -171,5 +201,21 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> {
 
 	public static TexturedModelData createModel() {
 		return TexturedModelData.of( getTexturedModelData(), 96, 96 );
+	}
+
+	@Override
+	public String getArmName(Arm arm) {
+		return arm == Arm.LEFT ? "left_heldItemAnchor" : "right_heldItemAnchor";
+	}
+
+	@Override
+	public void setArmAngle(Arm arm, MatrixStack matrices) {
+		ModelPart part = arm == Arm.LEFT ? this.left_heldItemAnchor : this.right_heldItemAnchor;
+		part.rotate(matrices);
+	}
+
+	@Override
+	public ModelPart getRoot() {
+		return this._root;
 	}
 }

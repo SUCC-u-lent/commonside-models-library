@@ -10,17 +10,17 @@ public record ModelPartId(int hash) {
 	public static ModelPartId create(ModelPart part)
 	{
 		return new ModelPartId(Objects.hash(
-			((ModelPartAccessor)(Object)part).CML$getInitialTransform(),
-			((ModelPartAccessor)(Object)part).CML$getCuboids(),
-			((ModelPartAccessor)(Object)part).CML$getChildren()
+			((ModelPartAccessor)(Object)part).CSM$getInitialTransform(),
+			((ModelPartAccessor)(Object)part).CSM$getCuboids(),
+			((ModelPartAccessor)(Object)part).CSM$getChildren()
 		));
 	}
 	public static ModelPartId create(ModelPartData part)
 	{
 		return new ModelPartId(Objects.hash(
-			((ModelPartDataAccessor)(Object)part).CML$getCuboidData(),
-			((ModelPartDataAccessor)(Object)part).CML$getRotationData(),
-			((ModelPartDataAccessor)(Object)part).CML$getChildren()
+			((ModelPartDataAccessor)(Object)part).CSM$getCuboidData(),
+			((ModelPartDataAccessor)(Object)part).CSM$getRotationData(),
+			((ModelPartDataAccessor)(Object)part).CSM$getChildren()
 		));
 	}
 }

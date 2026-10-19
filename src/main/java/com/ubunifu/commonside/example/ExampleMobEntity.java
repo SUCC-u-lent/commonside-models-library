@@ -8,12 +8,13 @@ import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.item.*;
 import net.minecraft.registry.*;
 import net.minecraft.world.World;
 import org.quiltmc.loader.api.QuiltLoader;
 import org.quiltmc.qsl.entity.api.QuiltEntityTypeBuilder;
 
-public class ExampleMobEntity extends MobEntity implements CommonsideEntity {
+public class ExampleMobEntity extends MobEntity implements CSMEntity {
 	public static EntityType<ExampleMobEntity> TYPE;
 
 	public ExampleMobEntity(EntityType<? extends MobEntity> entityType, World world) {
@@ -28,7 +29,7 @@ public class ExampleMobEntity extends MobEntity implements CommonsideEntity {
 	}
 	public static void Register() {
 		if (!QuiltLoader.isDevelopmentEnvironment()) return;
-		TYPE = Registry.register(Registries.ENTITY_TYPE, CMLConstants.createIdentifier("example_mob"), QuiltEntityTypeBuilder.create()
+		TYPE = Registry.register(Registries.ENTITY_TYPE, CSMConstants.createIdentifier("example_mob"), QuiltEntityTypeBuilder.create()
 			.entityFactory(ExampleMobEntity::new)
 			.setDimensions(EntityDimensions.changing(1,1))
 			.build());

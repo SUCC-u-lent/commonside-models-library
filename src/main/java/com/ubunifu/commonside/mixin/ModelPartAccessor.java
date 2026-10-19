@@ -9,38 +9,38 @@ import java.util.*;
 @Mixin(ModelPart.class)
 public interface ModelPartAccessor {
 	@Accessor("pivotX")
-	float CML$getPivotX();
+	float CSM$getPivotX();
 	@Accessor("pivotY")
-	float CML$getPivotY();
+	float CSM$getPivotY();
 	@Accessor("pivotZ")
-	float CML$getPivotZ();
+	float CSM$getPivotZ();
 
 	@Accessor("pitch")
-	float CML$getPitch();
+	float CSM$getPitch();
 	@Accessor("yaw")
-	float CML$getYaw();
+	float CSM$getYaw();
 	@Accessor("roll")
-	float CML$getRoll();
+	float CSM$getRoll();
 
 	@Accessor("scaleX")
-	float CML$getScaleX();
+	float CSM$getScaleX();
 	@Accessor("scaleY")
-	float CML$getScaleY();
+	float CSM$getScaleY();
 	@Accessor("scaleZ")
-	float CML$getScaleZ();
+	float CSM$getScaleZ();
 
 	@Accessor("visible")
-	boolean CML$getVisible();
+	boolean CSM$getVisible();
 	@Accessor("skipDraw")
-	boolean CML$getSkipDraw();
+	boolean CSM$getSkipDraw();
 
 	@Accessor("cuboids")
-	List<ModelPart.Cuboid> CML$getCuboids();
+	List<ModelPart.Cuboid> CSM$getCuboids();
 
 	@Accessor("children")
-	Map<String, ModelPart> CML$getChildren();
+	Map<String, ModelPart> CSM$getChildren();
 
 	@SuppressWarnings("SpellCheckingInspection")
 	@Accessor("initalTransform")
-	ModelTransform CML$getInitialTransform();
+	ModelTransform CSM$getInitialTransform();
 }
