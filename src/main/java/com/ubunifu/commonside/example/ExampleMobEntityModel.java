@@ -3,6 +3,7 @@ package com.ubunifu.commonside.example;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.ubunifu.commonside.*;
 import com.ubunifu.commonside.mixin.ModelPartAccessor;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -217,5 +218,9 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> impleme
 	@Override
 	public ModelPart getRoot() {
 		return this._root;
+	}
+
+	public static CSMRegistry.RegistryData buildRegistryData() {
+		return new CSMRegistry.RegistryData(getTexturedModelData(),96,96);
 	}
 }

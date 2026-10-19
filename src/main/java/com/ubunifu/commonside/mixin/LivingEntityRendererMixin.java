@@ -3,7 +3,7 @@ package com.ubunifu.commonside.mixin;
 import com.mojang.blaze3d.vertex.*;
 import com.ubunifu.commonside.*;
 import com.ubunifu.commonside.builder.*;
-import com.ubunifu.commonside.registry.CMLRegistry;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.*;
 import net.minecraft.client.render.entity.model.EntityModel;
@@ -22,7 +22,7 @@ public abstract class LivingEntityRendererMixin<E extends LivingEntity & CSMEnti
 	@Inject(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V",at= @At("TAIL"))
 	private void render(E livingEntity, float f, float g, MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci){
 		EntityType<?> entityType = livingEntity.getType();
-		if (!CMLRegistry.containsEntityType(entityType)) return;
+		if (!CSMRegistry.containsEntityType(entityType)) return;
 		VertexConsumer vertexConsumer =
 			vertexConsumerProvider.getBuffer(RenderLayer.getLines());
 		matrices.push();

@@ -1,14 +1,13 @@
 package com.ubunifu.commonside.example;
 
 import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.registry.CMLRegistry;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.*;
 import net.minecraft.registry.*;
 import net.minecraft.world.World;
 import org.quiltmc.loader.api.QuiltLoader;
@@ -38,7 +37,7 @@ public class ExampleMobEntity extends MobEntity implements CSMEntity {
 			TYPE,
 			createAttributes()
 		);
-		CMLRegistry.register(TYPE, ExampleMobEntityModel.getTexturedModelData());
+		CSMRegistry.register(TYPE, ExampleMobEntityModel::buildRegistryData);
 	}
 
 	@Override

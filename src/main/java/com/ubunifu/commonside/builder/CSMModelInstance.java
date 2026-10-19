@@ -1,13 +1,12 @@
 package com.ubunifu.commonside.builder;
 
 import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.registry.CMLRegistry;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.entity.*;
 import org.apache.commons.lang3.NotImplementedException;
-
-import java.util.*;
+import org.joml.Vector2i;
 
 public class CSMModelInstance implements AutoCloseable {
 	EntityType<?> entityType;
@@ -20,8 +19,8 @@ public class CSMModelInstance implements AutoCloseable {
 
 	public CSMModelInstance(EntityType<?> entityType, boolean applyGlobal) {
 		this.entityType = entityType;
-		if (!CMLRegistry.containsEntityType( entityType )) throw new NotImplementedException("Entity type: "+entityType.toString()+" does not have a model data registered. Register the model data BEFORE running this.");
-		this.modelData = CMLRegistry.getModelFor( entityType );
+		if (!CSMRegistry.containsEntityType( entityType )) throw new NotImplementedException("Entity type: "+entityType.toString()+" does not have a model data registered. Register the model data BEFORE running this.");
+		this.modelData = CSMRegistry.getModelFor( entityType );
 		this.map = new CSMModel( this.modelData, applyGlobal );
 	}
 
@@ -64,6 +63,14 @@ public class CSMModelInstance implements AutoCloseable {
 		this.map.close(); // Close this method first.
 		this.map = null;
 		// By setting them all to null we dispose of their reference clearing the resources used.
+	}
+
+	public static <T extends LivingEntity & CSMEntity> ModelPart createModel(T entity) {
+		EntityType<?> entityType = entity.getType();
+		ModelData data = CSMRegistry.getModelFor(entityType);
+		Vector2i dims = CSMRegistry.getTextureDimsFor(entityType);
+		TexturedModelData tmd = TexturedModelData.of(data, dims.x(), dims.y());
+		return tmd.createModel();
 	}
 
 	public CSMModel getModel() { return this.map; }
