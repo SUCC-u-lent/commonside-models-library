@@ -1,6 +1,6 @@
 package com.ubunifu.commonside.builder;
 
-import com.ubunifu.arctic_library.commonside.mixin.*;
+import com.ubunifu.commonside.mixin.*;
 import net.minecraft.client.model.*;
 
 import java.util.Objects;

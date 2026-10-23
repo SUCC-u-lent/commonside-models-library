@@ -1,7 +1,7 @@
 package com.ubunifu.commonside.builder;
 
-import com.ubunifu.arctic_library.commonside.*;
-import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
+import com.ubunifu.commonside.*;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.entity.*;

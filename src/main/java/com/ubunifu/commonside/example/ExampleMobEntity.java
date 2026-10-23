@@ -1,7 +1,7 @@
 package com.ubunifu.commonside.example;
 
-import com.ubunifu.arctic_library.commonside.*;
-import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
+import com.ubunifu.commonside.*;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;

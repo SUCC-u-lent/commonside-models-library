@@ -1,9 +1,9 @@
 package com.ubunifu.commonside.mixin;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.ubunifu.arctic_library.commonside.*;
-import com.ubunifu.arctic_library.commonside.builder.*;
-import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
+import com.ubunifu.commonside.*;
+import com.ubunifu.commonside.builder.*;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.LivingEntityRenderer;

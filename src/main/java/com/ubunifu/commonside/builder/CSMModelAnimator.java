@@ -1,7 +1,6 @@
 package com.ubunifu.commonside.builder;
 
-import com.ubunifu.arctic_library.commonside.*;
-import com.ubunifu.arctic_library.multibossbar.common.MultibossbarMod;
+import com.ubunifu.commonside.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.render.entity.model.EntityModel;
@@ -69,7 +68,7 @@ class CSMModelAnimator {
 			rendererAnimate(yaw, tickDelta, matrices, csmModel, entity, model);
 			matrices.pop();
 		} catch (Throwable throwable) {
-			MultibossbarMod.LOGGER.warn("Failed to handle animate",throwable);
+			CSMConstants.LOGGER.warn("Failed to handle animate",throwable);
 		}
 	}
 	// endregion

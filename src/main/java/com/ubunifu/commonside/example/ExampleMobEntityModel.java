@@ -1,9 +1,9 @@
 package com.ubunifu.commonside.example;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.ubunifu.arctic_library.commonside.*;
-import com.ubunifu.arctic_library.commonside.mixin.ModelPartAccessor;
-import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
+import com.ubunifu.commonside.*;
+import com.ubunifu.commonside.mixin.ModelPartAccessor;
+import com.ubunifu.commonside.registry.CSMRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;

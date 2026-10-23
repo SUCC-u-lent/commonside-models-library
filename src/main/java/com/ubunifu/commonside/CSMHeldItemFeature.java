@@ -1,7 +1,7 @@
 package com.ubunifu.commonside;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.ubunifu.arctic_library.commonside.builder.*;
+import com.ubunifu.commonside.builder.*;
 import net.minecraft.client.model.ModelPartData;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.feature.*;
