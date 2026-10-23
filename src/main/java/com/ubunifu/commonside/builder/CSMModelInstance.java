@@ -1,7 +1,7 @@
 package com.ubunifu.commonside.builder;
 
-import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.registry.CSMRegistry;
+import com.ubunifu.arctic_library.commonside.*;
+import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.entity.*;
@@ -22,6 +22,8 @@ public class CSMModelInstance implements AutoCloseable {
 		if (!CSMRegistry.containsEntityType( entityType )) throw new NotImplementedException("Entity type: "+entityType.toString()+" does not have a model data registered. Register the model data BEFORE running this.");
 		this.modelData = CSMRegistry.getModelFor( entityType );
 		this.map = new CSMModel( this.modelData, applyGlobal );
+		this.map.scale = CSMRegistry.getModelSize( entityType );
+		this.map.offset = CSMRegistry.getModelOffset( entityType );
 	}
 
 	public <T extends LivingEntity & CSMEntity, M extends EntityModel<T> & CSModel> void animate(T entity, M model)

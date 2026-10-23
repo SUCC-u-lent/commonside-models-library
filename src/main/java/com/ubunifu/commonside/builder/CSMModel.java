@@ -1,8 +1,8 @@
 package com.ubunifu.commonside.builder;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.mixin.*;
+import com.ubunifu.arctic_library.commonside.*;
+import com.ubunifu.arctic_library.commonside.mixin.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -14,11 +14,13 @@ import org.joml.*;
 
 import java.lang.Math;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.Consumer;
 
 public class CSMModel implements AutoCloseable {
 	ModelData modelData;
 	boolean applyGlobal;
+	Vec3d scale = new Vec3d(1,1,1);
+	Vec3d offset = new Vec3d(0,0,0);
 
 	/** The identity map, aka the unchanged source. */
 	private final Map<String, CommonPart> BASE_PART_MAP = new HashMap<>();
@@ -31,6 +33,15 @@ public class CSMModel implements AutoCloseable {
 		ModelPartData root = modelData.getRoot();
 		process(root, applyGlobal);
 	}
+
+	public void setScale(float x, float y, float z) {
+		this.scale = new Vec3d(x,y,z);
+	}
+
+	public void setOffset(float x, float y, float z) {
+		this.offset = new Vec3d(x,y,z);
+	}
+
 	//region Animation
 	private float getTickDelta()
 	{
@@ -58,6 +69,12 @@ public class CSMModel implements AutoCloseable {
 	void syncTransforms(M model) {
 		Matrix4f matrix4f = new Matrix4f();
 		matrix4f.translate(-0.04f,1.501f,0);
+		matrix4f.translate((float) this.offset.x, (float) this.offset.y, (float) this.offset.z);
+		matrix4f.scale(
+			(float)scale.x,
+			(float)scale.y,
+			(float)scale.z
+		);
 		syncTransforms(model, "root", model.getRoot(), matrix4f);
 	}
 
@@ -134,34 +151,7 @@ public class CSMModel implements AutoCloseable {
 
 	private <T extends LivingEntity & CSMEntity, M extends EntityModel<T>> void __animateModel(T entity, M model)
 	{
-		float g = this.getTickDelta();
-		float h = MathHelper.lerpAngleDegrees(g, entity.prevBodyYaw, entity.bodyYaw);
-		float j = MathHelper.lerpAngleDegrees(g, entity.prevHeadYaw, entity.headYaw);
-		float k = j - h;
-		float n = 0.0F;
-		float o = 0.0F;
-		if (!entity.hasVehicle() && entity.isAlive()) {
-			n = entity.limbData.getLimbDistance(g);
-			o = entity.limbData.getLimbAngle(g);
-			if (entity.isBaby()) {
-				o *= 3.0F;
-			}
-
-			if (n > 1.0F) {
-				n = 1.0F;
-			}
-		}
-		float m = MathHelper.lerp(g, entity.prevPitch, entity.getPitch());
-		if (LivingEntityRenderer.renderFlipped(entity)) {
-			m *= -1.0F;
-			k *= -1.0F;
-		}
-		MatrixStack matrixStack = new MatrixStack(); // Probably not how its implemented but eh, we'll find out.
-		// g = tickDelta
-		float l = this.animateGetAnimationProgress(entity, g);
-		this.animateSetupTransforms(entity, matrixStack, l, h, g);
-		model.animateModel(entity, o, n, g);
-		model.setAngles(entity, o, n, l, k, m);
+		CSMModelAnimator.animate(this,entity,model);
 	}
 	private <T extends LivingEntity & CSMEntity> float animateGetAnimationProgress(T entity, float tickDelta) {
 		return (float)entity.age + tickDelta;
@@ -195,7 +185,7 @@ public class CSMModel implements AutoCloseable {
 		}
 
 		if (!entity.hasPose(EntityPose.SLEEPING)) {
-			matrices.multiply(Axis.Y_POSITIVE.rotationDegrees(180.0F - bodyYaw));
+			matrices.rotate(Axis.Y_POSITIVE.rotationDegrees(180.0F - bodyYaw));
 		}
 
 		if (entity.deathTime > 0) {
@@ -205,19 +195,19 @@ public class CSMModel implements AutoCloseable {
 				f = 1.0F;
 			}
 
-			matrices.multiply(Axis.Z_POSITIVE.rotationDegrees(f * this.animateGetLyingAngle(entity)));
+			matrices.rotate(Axis.Z_POSITIVE.rotationDegrees(f * this.animateGetLyingAngle(entity)));
 		} else if (entity.isUsingRiptide()) {
-			matrices.multiply(Axis.X_POSITIVE.rotationDegrees(-90.0F - entity.getPitch()));
-			matrices.multiply(Axis.Y_POSITIVE.rotationDegrees(((float)entity.age + tickDelta) * -75.0F));
+			matrices.rotate(Axis.X_POSITIVE.rotationDegrees(-90.0F - entity.getPitch()));
+			matrices.rotate(Axis.Y_POSITIVE.rotationDegrees(((float)entity.age + tickDelta) * -75.0F));
 		} else if (entity.hasPose(EntityPose.SLEEPING)) {
 			Direction direction = entity.getSleepingDirection();
 			float g = direction != null ? animateGetYaw(direction) : bodyYaw;
-			matrices.multiply(Axis.Y_POSITIVE.rotationDegrees(g));
-			matrices.multiply(Axis.Z_POSITIVE.rotationDegrees(this.animateGetLyingAngle(entity)));
-			matrices.multiply(Axis.Y_POSITIVE.rotationDegrees(270.0F));
+			matrices.rotate(Axis.Y_POSITIVE.rotationDegrees(g));
+			matrices.rotate(Axis.Z_POSITIVE.rotationDegrees(this.animateGetLyingAngle(entity)));
+			matrices.rotate(Axis.Y_POSITIVE.rotationDegrees(270.0F));
 		} else if (LivingEntityRenderer.renderFlipped(entity)) {
 			matrices.translate(0.0F, entity.getHeight() + 0.1F, 0.0F);
-			matrices.multiply(Axis.Z_POSITIVE.rotationDegrees(180.0F));
+			matrices.rotate(Axis.Z_POSITIVE.rotationDegrees(180.0F));
 		}
 
 	}
@@ -246,6 +236,12 @@ public class CSMModel implements AutoCloseable {
 				0.0F
 			);
 		}
+
+		matrixStack.scale(
+			(float) this.scale.x,
+			(float) this.scale.y,
+			(float) this.scale.z
+		);
 
 		processChild(
 			"root",
@@ -351,7 +347,7 @@ public class CSMModel implements AutoCloseable {
 
 			matrix.translate(transform.pivotX / 16.0F, transform.pivotY / 16.0F, transform.pivotZ / 16.0F);
 			if (transform.pitch != 0.0F || transform.yaw != 0.0F || transform.roll != 0.0F) {
-				matrix.multiply((new Quaternionf()).rotationZYX(transform.roll, transform.yaw, transform.pitch));
+				matrix.rotate((new Quaternionf()).rotationZYX(transform.roll, transform.yaw, transform.pitch));
 			}
 		};
 		rotateMatrixStack.accept( matrixStack );

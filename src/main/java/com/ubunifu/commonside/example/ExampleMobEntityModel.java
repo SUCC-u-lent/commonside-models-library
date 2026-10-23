@@ -1,14 +1,14 @@
 package com.ubunifu.commonside.example;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.mixin.ModelPartAccessor;
-import com.ubunifu.commonside.registry.CSMRegistry;
+import com.ubunifu.arctic_library.commonside.*;
+import com.ubunifu.arctic_library.commonside.mixin.ModelPartAccessor;
+import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Arm;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 
 public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> implements CSMModelWithArms, CSModel {
 	private final ModelPart _root;
@@ -83,11 +83,14 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> impleme
 		return getChild(_root, name);
 	}
 	private ModelPart getChild(ModelPart parent, String name){
+		if (parent == null) return null;
 		if (parent.containsPart(name)) return parent.getChild(name);
-		for (ModelPart value : ((ModelPartAccessor) (Object) parent).CSM$getChildren().values()) {
-			ModelPart p = getChild( value, name );
-			if (p != null) return p;
-		}
+		try{
+			for (ModelPart value : ((ModelPartAccessor) (Object) parent).CSM$getChildren().values()) {
+				ModelPart p = getChild( value, name );
+				if (p != null) return p;
+			}
+		}catch (Exception ignored){}
 		return null;
 	}
 
@@ -221,6 +224,6 @@ public class ExampleMobEntityModel extends EntityModel<ExampleMobEntity> impleme
 	}
 
 	public static CSMRegistry.RegistryData buildRegistryData() {
-		return new CSMRegistry.RegistryData(getTexturedModelData(),96,96);
+		return new CSMRegistry.RegistryData(getTexturedModelData(),96,96, new Vec3d(1,1,1), new Vec3d(0,0,0));
 	}
 }

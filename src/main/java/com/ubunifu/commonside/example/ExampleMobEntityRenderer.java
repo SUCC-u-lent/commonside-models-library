@@ -1,6 +1,6 @@
 package com.ubunifu.commonside.example;
 
-import com.ubunifu.commonside.*;
+import com.ubunifu.arctic_library.commonside.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.minecraft.client.render.entity.*;

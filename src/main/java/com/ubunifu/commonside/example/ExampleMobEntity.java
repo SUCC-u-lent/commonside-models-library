@@ -1,7 +1,7 @@
 package com.ubunifu.commonside.example;
 
-import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.registry.CSMRegistry;
+import com.ubunifu.arctic_library.commonside.*;
+import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
@@ -11,7 +11,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.registry.*;
 import net.minecraft.world.World;
 import org.quiltmc.loader.api.QuiltLoader;
-import org.quiltmc.qsl.entity.api.QuiltEntityTypeBuilder;
 
 public class ExampleMobEntity extends MobEntity implements CSMEntity {
 	public static EntityType<ExampleMobEntity> TYPE;
@@ -28,9 +27,11 @@ public class ExampleMobEntity extends MobEntity implements CSMEntity {
 	}
 	public static void Register() {
 		if (!QuiltLoader.isDevelopmentEnvironment()) return;
-		TYPE = Registry.register(Registries.ENTITY_TYPE, CSMConstants.createIdentifier("example_mob"), QuiltEntityTypeBuilder.create()
-			.entityFactory(ExampleMobEntity::new)
-			.setDimensions(EntityDimensions.changing(1,1))
+		TYPE = Registry.register(Registries.ENTITY_TYPE, CSMConstants.createIdentifier("example_mob"), EntityType.Builder.create(
+			ExampleMobEntity::new,
+			SpawnGroup.MISC
+			)
+			.setDimensions(1,1)
 			.build());
 
 		FabricDefaultAttributeRegistry.register(

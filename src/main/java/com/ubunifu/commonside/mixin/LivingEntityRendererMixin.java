@@ -1,15 +1,17 @@
 package com.ubunifu.commonside.mixin;
 
-import com.mojang.blaze3d.vertex.*;
-import com.ubunifu.commonside.*;
-import com.ubunifu.commonside.builder.*;
-import com.ubunifu.commonside.registry.CSMRegistry;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.ubunifu.arctic_library.commonside.*;
+import com.ubunifu.arctic_library.commonside.builder.*;
+import com.ubunifu.arctic_library.commonside.registry.CSMRegistry;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
-import net.minecraft.client.render.entity.*;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.util.ColorUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.*;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.Axis;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,10 +25,12 @@ public abstract class LivingEntityRendererMixin<E extends LivingEntity & CSMEnti
 	private void render(E livingEntity, float f, float g, MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci){
 		EntityType<?> entityType = livingEntity.getType();
 		if (!CSMRegistry.containsEntityType(entityType)) return;
+		if (!CSMConstants.shouldRenderCommonsideModel()) return;
+		if (!isHitboxesVisible()) return;
 		VertexConsumer vertexConsumer =
 			vertexConsumerProvider.getBuffer(RenderLayer.getLines());
 		matrices.push();
-		matrices.multiply(
+		matrices.rotate(
 			Axis.Y_POSITIVE.rotationDegrees(-f)
 		);
 
@@ -37,6 +41,7 @@ public abstract class LivingEntityRendererMixin<E extends LivingEntity & CSMEnti
 			1.0F,
 			-1.0F
 		);
+		int boundsColor = CSMConstants.getCommonsideBoundsColor();
 		try (CSMModelInstance modelInstance = CSMModelInstance.createForGeneric(livingEntity, true)) {
 			modelInstance.animateModel(livingEntity, model,false);
 			for (CommonPart commonPart : modelInstance.getModel().getParts().values()) {
@@ -45,12 +50,23 @@ public abstract class LivingEntityRendererMixin<E extends LivingEntity & CSMEnti
 					matrices,
 					vertexConsumer,
 					commonPart.bounds(),
-					1, 0, 0, 1
+					(float) ColorUtil.Argb32.getRed(boundsColor) / 255,
+					(float) ColorUtil.Argb32.getGreen(boundsColor) / 255,
+					(float) ColorUtil.Argb32.getBlue(boundsColor) / 255,
+					(float) ColorUtil.Argb32.getAlpha(boundsColor) / 255
 				);
 			}
 		} catch (Exception e) {
 			CSMConstants.LOGGER.warn("Failed to draw bounds",e);
 		}
 		matrices.pop();
+	}
+	@Unique
+	private static boolean isHitboxesVisible()
+	{
+		try{
+			MinecraftClient client = MinecraftClient.getInstance();
+			return client.getEntityRenderDispatcher().shouldRenderHitboxes();
+		}catch (Exception ignored){ return false; }
 	}
 }

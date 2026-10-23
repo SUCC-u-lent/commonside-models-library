@@ -1,11 +1,11 @@
 package com.ubunifu.commonside;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.ubunifu.commonside.builder.*;
-import net.minecraft.client.model.*;
+import com.ubunifu.arctic_library.commonside.builder.*;
+import net.minecraft.client.model.ModelPartData;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.feature.*;
-import net.minecraft.client.render.entity.model.*;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
@@ -46,11 +46,11 @@ public class CSMHeldItemFeature<T extends LivingEntity & CSMEntity,M extends Ent
 
 				Matrix4f armMatrix = modelConversion.invert().mul(partMatrix);
 				Vector3f scale = this.scale.get();
-				matrices.multiplyMatrix( armMatrix );
+				matrices.multiply( armMatrix );
 				renderAxis(matrices, vertexConsumers, light);
 
-				matrices.multiply(Axis.X_POSITIVE.rotationDegrees(-90.0F));
-				matrices.multiply(Axis.Y_POSITIVE.rotationDegrees(180.0F));
+				matrices.rotate(Axis.X_POSITIVE.rotationDegrees(-90.0F));
+				matrices.rotate(Axis.Y_POSITIVE.rotationDegrees(180.0F));
 				boolean bl = arm == Arm.LEFT;
 //				matrices.translate((float)(bl ? -1 : 1) / 16.0F, 0,0);
 				matrices.scale(scale.x,scale.y,scale.z);

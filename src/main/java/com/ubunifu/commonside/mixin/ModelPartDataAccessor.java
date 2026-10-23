@@ -1,6 +1,5 @@
 package com.ubunifu.commonside.mixin;
 
-import com.google.common.collect.Maps;
 import net.minecraft.client.model.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
